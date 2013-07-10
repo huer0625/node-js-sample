@@ -7,7 +7,8 @@ app.get('/', function(request, response) {
  // response.send('Hello World! 2');
   var buf = new Buffer();
   buf.write(fs.readFileSync("index.html"));
-  response.send(buf);
+  console.log(buf);
+  response.send("hello, the world");
   
 });
 
