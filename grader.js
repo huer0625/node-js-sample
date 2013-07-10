@@ -24,8 +24,11 @@ References:
 var fs = require('fs');
 var program = require('commander');
 var cheerio = require('cheerio');
+var sys = require('util'),
+    rest = require('restler');
 var HTMLFILE_DEFAULT = "index.html";
 var CHECKSFILE_DEFAULT = "checks.json";
+var HTMLURL_DEFALUT = "http://murmuring-sierra-3331.herokuapp.com/"
 
 var assertFileExists = function(infile) {
     var instr = infile.toString();
@@ -55,6 +58,24 @@ var checkHtmlFile = function(htmlfile, checksfile) {
     return out;
 };
 
+var checkHtmlUrl = function(url, checksfile) {  
+  var htmlfile=new String(".tmp.index");
+
+  rest.get(url).on('complete', function(result) {
+  if (result instanceof Error) {
+    sys.puts('Error: ' + result.message);
+    this.retry(5000); // try again after 5 sec
+  } else {
+    fs.writeFileSync(htmlfile.toString(), result);
+  }
+}); 
+  return checkHtmlFile(htmlfile.toString(), checksfile);
+}
+
+var assertUrlExists = function (url)  {
+  return url;
+}
+
 var clone = function(fn) {
     // Workaround for commander.js issue.
     // http://stackoverflow.com/a/6772648
@@ -62,13 +83,13 @@ var clone = function(fn) {
 };
 
 if(require.main == module) {
-    var flag = False;
     program
         .option('-c, --checks <check_file>', 'Path to checks.json', clone(assertFileExists), CHECKSFILE_DEFAULT)
         .option('-f, --file <html_file>', 'Path to index.html', clone(assertFileExists), HTMLFILE_DEFAULT)
-        .option('-u, --url <html_url>', 'Url to index.html', clone(assertFileExists), HTMLFILE_DEFAULT)
+        .option('-u, --url <html_url>', 'Url to index.html', clone(assertUrlExists), "")
         .parse(process.argv);
-    if (flag) {
+    console.log(program.checks, program.file, program.url)
+    if (program.url == "") {
     var checkJson = checkHtmlFile(program.file, program.checks);
     } else {
       var checkJson = checkHtmlUrl(program.url, program.checks);
